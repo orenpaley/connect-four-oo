@@ -6,26 +6,27 @@ class Game {
     this.WIDTH = WIDTH
     this.board = board;
     this.currPlayer = currPlayer
+    this.handleClick = this.handleClick.bind(this)
+
   //   let currPlayer = 1; // active player: 1 or 2
   //   let board = []; // array of rows, each row is array of cells  (board[y][x])
   }
+
   startGame() {
- console.log('start-t',this)
     this.makeBoard();
-    this.makeHtmlBoard()
- 
+    this.makeHtmlBoard() 
   }
+
   makeBoard() {
-    console.log('makeB-t',this)
     board = []
     for (let y = 0; y < this.HEIGHT; y++) {
       board.push(Array.from({ length: this.WIDTH }));
     }
   }
+
   makeHtmlBoard() {
-    console.log('makeHTML-t',this)
     const board = document.getElementById('board');
-  
+
     // make column tops (clickable area for adding a piece to that column)
     const top = document.createElement('tr');
     top.setAttribute('id', 'column-top');
@@ -36,7 +37,6 @@ class Game {
       headCell.setAttribute('id', x);
       top.append(headCell);
     }
-  
     board.append(top);
   
     // make main part of board
@@ -47,65 +47,55 @@ class Game {
         const cell = document.createElement('td');
         cell.setAttribute('id', `${y}-${x}`);
         row.append(cell);
-      }
-  
+      }  
       board.append(row);
     }
   }
  
-  
-  findSpotForCol(x) {
-    console.log('find-spot:', this)
-    for (let y = HEIGHT - 1; y >= 0; y--) {
-      console.log('find-spot-y', i)
-      if (!board[y][x]) {
-        return y;
-      }
-    }
-    return null;
-  }
-
   placeInTable(y, x) {
-    console.log('placeInTable-t', this)
     const piece = document.createElement('div');
     piece.classList.add('piece');
-    piece.classList.add(`p${currPlayer}`);
+    piece.classList.add(`p${this.currPlayer}`);
     piece.style.top = -50 * (y + 2);
   
     const spot = document.getElementById(`${y}-${x}`);
     spot.append(piece);
   }
 
-  endGame(msg) {
-    console.log('end-game-t:', this)
-    alert(msg);
+  deleteHTMLBoard() {
+    let board = document.querySelector('#board');
+  for (let y = this.WIDTH - 1; y>=0; y--) {
+    board.children[y].remove();
+  }
   }
 
+  endGame(msg) {
+    alert(msg);
+    this.deleteHTMLBoard()
+    this.board = [];
+    this.makeBoard();
+    this.makeHtmlBoard();
+  }
+ 
   handleClick(evt) {
     // get x from ID of clicked cell
     const x = +evt.target.id;
-    console.log('handleClick:', this)
-  
+
     // get next spot in column (if none, ignore click)
-    const y = () => findSpotForCol(x);
-    y();
-    console.log('yes????:', y)
+    const y = this.findSpotForCol(x);
     if (y === null) {
       return y;
     }
-   console.log('where am i:',this)
-   console.log('y', y)
+
     // place piece in board and add to HTML table
-    // board[y][x] = this.currPlayer;
-    const place = () => this.placeInTable(y, x);
+    board[y][x] = this.currPlayer;
+    this.placeInTable(y, x);
    
-    
     // check for win
-    const winCheck = () => {
-      if (checkForWin()) {
-      return endGame(`Player ${currPlayer} won!`);
+    const checkWin = this.checkForWin();
+    if (checkWin) {
+      return this.endGame(`Player ${this.currPlayer} won!`)
     }
-  }
     
     // check for tie
     if (board.every(row => row.every(cell => cell))) {
@@ -115,22 +105,17 @@ class Game {
     // switch players
     this.currPlayer = this.currPlayer === 1 ? 2 : 1;
   }
-  checkForWin() {
-    function _win(cells) {
-      // Check four cells to see if they're all color of current player
-      //  - cells: list of four (y, x) cells
-      //  - returns true if all are legal coordinates & all match currPlayer
-  
-      return cells.every(
-        ([y, x]) =>
-          y >= 0 &&
-          y < this.HEIGHT &&
-          x >= 0 &&
-          x < this.WIDTH &&
-          board[y][x] === currPlayer
-      );
+
+  findSpotForCol(x) {
+    for (let y = this.HEIGHT - 1; y >= 0; y--) {
+      if (!board[y][x]) {
+        return y;
+      }
     }
-  
+    return null;
+  }
+ 
+  checkForWin() {
     for (let y = 0; y < this.HEIGHT; y++) {
       for (let x = 0; x < this.WIDTH; x++) {
         // get "check list" of 4 cells (starting here) for each of the different
@@ -141,11 +126,24 @@ class Game {
         const diagDL = [[y, x], [y + 1, x - 1], [y + 2, x - 2], [y + 3, x - 3]];
   
         // find winner (only checking each win-possibility as needed)
-        if (_win(horiz) || _win(vert) || _win(diagDR) || _win(diagDL)) {
+        if (this._win(horiz) || this._win(vert) || this._win(diagDR) || this._win(diagDL)) {
           return true;
         }
       }
     }
+  }
+  _win(cells) {
+    // Check four cells to see if they're all color of current player
+    //  - cells: list of four (y, x) cells
+    //  - returns true if all are legal coordinates & all match currPlayer
+    return cells.every(
+      ([y, x]) =>
+        y >= 0 &&
+        y < this.HEIGHT &&
+        x >= 0 &&
+        x < this.WIDTH &&
+        board[y][x] === this.currPlayer
+    );
   }
 }
 
