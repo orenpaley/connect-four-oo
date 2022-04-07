@@ -1,27 +1,42 @@
 
 
 class Game {
-  constructor(WIDTH, HEIGHT, board = [], currPlayer = 1) {
+  constructor(WIDTH, HEIGHT, board = [], currPlayer = 1, theme = []) {
     this.HEIGHT = HEIGHT;
     this.WIDTH = WIDTH
     this.board = board;
-    this.currPlayer = currPlayer
-    this.handleClick = this.handleClick.bind(this)
+    this.currPlayer = currPlayer;
+    this.theme = theme;
+    this.handleClick = this.handleClick.bind(this);  
+    this.startGame = this.startGame.bind(this);
 
   //   let currPlayer = 1; // active player: 1 or 2
   //   let board = []; // array of rows, each row is array of cells  (board[y][x])
   }
 
   startGame() {
+    const button = document.querySelector('#start')
+
+    button.addEventListener('click', (event) => {
+    const p1Color = document.querySelector('#colorOne')
+    const p2Color = document.querySelector('#colorTwo')
+    let p1Selected = p1Color.options[p1Color.selectedIndex].value
+    let p2Selected = p2Color.options[p2Color.selectedIndex].value
+    this.theme = [p1Selected,p2Selected]
+    this.deleteHTMLBoard()
+    this.board = [];
+    this.currPlayer = 1;
     this.makeBoard();
-    this.makeHtmlBoard() 
-  }
+    this.makeHtmlBoard();
+     })    
+    }
 
   makeBoard() {
     board = []
     for (let y = 0; y < this.HEIGHT; y++) {
       board.push(Array.from({ length: this.WIDTH }));
     }
+
   }
 
   makeHtmlBoard() {
@@ -38,7 +53,6 @@ class Game {
       top.append(headCell);
     }
     board.append(top);
-  
     // make main part of board
     for (let y = 0; y < this.HEIGHT; y++) {
       const row = document.createElement('tr');
@@ -56,6 +70,7 @@ class Game {
     const piece = document.createElement('div');
     piece.classList.add('piece');
     piece.classList.add(`p${this.currPlayer}`);
+    piece.style.backgroundColor = this.theme[`${this.currPlayer - 1}`]
     piece.style.top = -50 * (y + 2);
   
     const spot = document.getElementById(`${y}-${x}`);
@@ -64,19 +79,20 @@ class Game {
 
   deleteHTMLBoard() {
     let board = document.querySelector('#board');
-  for (let y = this.WIDTH - 1; y>=0; y--) {
-    board.children[y].remove();
-  }
-  }
-
+      for (let y = this.WIDTH - 1; y>=0; y--) {
+        try { board.children[y].remove()}
+        finally {
+          continue;
+        }
+      
+       }
+    }
+  
   endGame(msg) {
     alert(msg);
-    this.deleteHTMLBoard()
-    this.board = [];
-    this.makeBoard();
-    this.makeHtmlBoard();
+    board = [];
   }
- 
+
   handleClick(evt) {
     // get x from ID of clicked cell
     const x = +evt.target.id;
@@ -86,35 +102,33 @@ class Game {
     if (y === null) {
       return y;
     }
-
     // place piece in board and add to HTML table
     board[y][x] = this.currPlayer;
     this.placeInTable(y, x);
-   
     // check for win
     const checkWin = this.checkForWin();
     if (checkWin) {
       return this.endGame(`Player ${this.currPlayer} won!`)
     }
-    
     // check for tie
     if (board.every(row => row.every(cell => cell))) {
       return endGame('Tie!');
     }
-      
     // switch players
     this.currPlayer = this.currPlayer === 1 ? 2 : 1;
   }
 
   findSpotForCol(x) {
     for (let y = this.HEIGHT - 1; y >= 0; y--) {
-      if (!board[y][x]) {
-        return y;
-      }
-    }
+      try {
+        // this is a strange behavior to me but it works, falsy values??
+        if (!board[y][x]) {
+          return y;
+        }}
+      catch {throw new Error('you need to start a new game!') }
+      } 
     return null;
-  }
- 
+}
   checkForWin() {
     for (let y = 0; y < this.HEIGHT; y++) {
       for (let x = 0; x < this.WIDTH; x++) {
@@ -132,6 +146,7 @@ class Game {
       }
     }
   }
+
   _win(cells) {
     // Check four cells to see if they're all color of current player
     //  - cells: list of four (y, x) cells
@@ -148,4 +163,4 @@ class Game {
 }
 
 const game = new Game(7,6);
-game.startGame()
+game.startGame();
